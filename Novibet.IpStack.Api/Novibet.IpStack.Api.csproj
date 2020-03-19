@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>92b9e3ad-50ac-4a71-ad5c-a0e87d70b85e</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Novibet.IpStack.Abstractions\Novibet.IpStack.Abstractions.csproj" />
+    <ProjectReference Include="..\Novibet.IpStack.Business\Novibet.IpStack.Business.csproj" />
+    <ProjectReference Include="..\Novibet.IpStack.Client\Novibet.IpStack.Client.csproj" />
+  </ItemGroup>
+
+
+</Project>

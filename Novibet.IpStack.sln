@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29230.61
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Novibet.IpStack.Client", "Novibet.IpStack.Client\Novibet.IpStack.Client.csproj", "{DE685985-00A2-43F5-BA5A-81F1382E4593}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A1D785EA-8274-4D4E-AC65-FAEF0EFBEDF0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Novibet.Integration.Tests", "Novibet.Integration.Tests\Novibet.Integration.Tests.csproj", "{77756EA9-0EFC-4E0E-98EB-372059A49642}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Novibet.IpStack.Abstractions", "Novibet.IpStack.Abstractions\Novibet.IpStack.Abstractions.csproj", "{17597C0B-0C70-445F-9DF8-7BF8E5DBA3EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Novibet.IpStack.Api", "Novibet.IpStack.Api\Novibet.IpStack.Api.csproj", "{71619691-AAAF-43CE-83FB-CE0C527FA74E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Novibet.IpStack.Business", "Novibet.IpStack.Business\Novibet.IpStack.Business.csproj", "{758966ED-414B-45AC-AB8E-06B55BB85118}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE685985-00A2-43F5-BA5A-81F1382E4593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE685985-00A2-43F5-BA5A-81F1382E4593}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE685985-00A2-43F5-BA5A-81F1382E4593}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE685985-00A2-43F5-BA5A-81F1382E4593}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77756EA9-0EFC-4E0E-98EB-372059A49642}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77756EA9-0EFC-4E0E-98EB-372059A49642}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77756EA9-0EFC-4E0E-98EB-372059A49642}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77756EA9-0EFC-4E0E-98EB-372059A49642}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17597C0B-0C70-445F-9DF8-7BF8E5DBA3EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17597C0B-0C70-445F-9DF8-7BF8E5DBA3EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17597C0B-0C70-445F-9DF8-7BF8E5DBA3EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17597C0B-0C70-445F-9DF8-7BF8E5DBA3EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71619691-AAAF-43CE-83FB-CE0C527FA74E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71619691-AAAF-43CE-83FB-CE0C527FA74E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71619691-AAAF-43CE-83FB-CE0C527FA74E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71619691-AAAF-43CE-83FB-CE0C527FA74E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{758966ED-414B-45AC-AB8E-06B55BB85118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{758966ED-414B-45AC-AB8E-06B55BB85118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{758966ED-414B-45AC-AB8E-06B55BB85118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{758966ED-414B-45AC-AB8E-06B55BB85118}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{77756EA9-0EFC-4E0E-98EB-372059A49642} = {A1D785EA-8274-4D4E-AC65-FAEF0EFBEDF0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {83706508-CBE6-4CAF-B3A0-D7151E3DFC48}
+	EndGlobalSection
+EndGlobal
