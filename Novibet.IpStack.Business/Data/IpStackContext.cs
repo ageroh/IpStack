@@ -9,8 +9,12 @@ namespace Novibet.IpStack.Business.Data
         {
         }
 
-        public DbSet<Ip> Ip { get; set; }
-        
+        public DbSet<Ip> IpAddressess { get; set; }
+        public DbSet<Continent> Continents { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<City> Cities { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Country>().ToTable("Country");
@@ -18,23 +22,9 @@ namespace Novibet.IpStack.Business.Data
             modelBuilder.Entity<City>().ToTable("City");
             modelBuilder.Entity<Ip>().ToTable("Ip");
 
-            modelBuilder.Entity<Ip>()
-               .HasOne(d => d.City)
-               .WithMany()
-               .HasForeignKey();
-
-            modelBuilder.Entity<Ip>()
-               .HasOne(d => d.Country)
-               .WithMany()
-               .HasForeignKey();
-
-            modelBuilder.Entity<Ip>()
-               .HasOne(d => d.Continent)
-               .WithMany()
-               .HasForeignKey();
-
-            modelBuilder.Entity<Ip>().HasKey(z => z.IpAddress);
             modelBuilder.Entity<Ip>().HasIndex(z => z.IpAddress).IsUnique();
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

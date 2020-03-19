@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Novibet.IpStack.Abstractions;
-using Novibet.IpStack.Business.Models;
 using Novibet.IpStack.Business.Services;
 
 namespace Novibet.IpStack.Api.Controllers
@@ -27,13 +23,23 @@ namespace Novibet.IpStack.Api.Controllers
         [HttpGet("{ip}")]
         public async Task<IActionResult> Get(string ip)
         {
-            var ipDetail = await _ipStackService.GetIpCachedAsync(ip);
-            if(ipDetail == null)
+            try
             {
+                var ipDetail = await _ipStackService.GetIpCachedAsync(ip);
+
+                if (ipDetail == null)
+                {
+                    _logger.LogWarning("Ip {ip} does not exists.", ip);
+                    return StatusCode((int)HttpStatusCode.InternalServerError);
+                }
+
+                return Ok(ipDetail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Some error occurred.");
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
-
-            return Ok(ipDetail);
         }
     }
 }

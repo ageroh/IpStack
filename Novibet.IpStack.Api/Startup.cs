@@ -8,6 +8,7 @@ using Novibet.IpStack.Abstractions;
 using Novibet.IpStack.Business.Data;
 using Novibet.IpStack.Business.Services;
 using Novibet.IpStack.Client;
+using System.Data.SqlClient;
 
 namespace Novibet.IpStack.Api
 {
