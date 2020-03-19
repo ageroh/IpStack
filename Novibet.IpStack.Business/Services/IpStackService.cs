@@ -57,7 +57,7 @@ namespace Novibet.IpStack.Business.Services
                     return ipDetail;
                 }
 
-                ipDetail = await GetIpInternalAsync(ipAddress);
+                ipDetail = await GetIpAsync(ipAddress);
                 if (ipDetail == null)
                 {
                     return null;
@@ -81,7 +81,7 @@ namespace Novibet.IpStack.Business.Services
             }
         }
 
-        private async Task<Ip> GetIpInternalAsync(string ipAddress)
+        public async Task<Ip> GetIpAsync(string ipAddress)
         {
             var ipDetail = await _dbContext.IpAddressess.FirstOrDefaultAsync(z => z.IpAddress == ipAddress);
             if (ipDetail != null)
@@ -119,10 +119,10 @@ namespace Novibet.IpStack.Business.Services
                 return;
             }
 
-            city = _dbContext.Cities.Add(new City { Name = ipDetails.City }).Entity;
-            cityId = city.Id;
-
+            var cityInserted = _dbContext.Cities.Add(new City { Name = ipDetails.City });
             _dbContext.SaveChanges();
+
+            cityId = cityInserted.Entity.Id;
         }
 
         private void GetOrAddCountry(IPDetails ipDetails, out int countryId)
@@ -134,10 +134,10 @@ namespace Novibet.IpStack.Business.Services
                 return;
             }
 
-            country = _dbContext.Countries.Add(new Country { Name = ipDetails.Country }).Entity;
-            countryId = country.Id;
-
+            var countryInserted = _dbContext.Countries.Add(new Country { Name = ipDetails.Country });
             _dbContext.SaveChanges();
+
+            countryId = countryInserted.Entity.Id;
         }
 
         private void GetOrAddContinent(IPDetails ipDetails, out int continentId)
@@ -149,10 +149,10 @@ namespace Novibet.IpStack.Business.Services
                 return;
             }
 
-            continent = _dbContext.Continents.Add(new Continent { Name = ipDetails.Continent }).Entity;
-            continentId = continent.Id;
-
+            var continentInserted = _dbContext.Continents.Add(new Continent { Name = ipDetails.Continent });
             _dbContext.SaveChanges();
+
+            continentId = continentInserted.Entity.Id;
         }
     }
 }
