@@ -13,7 +13,9 @@ namespace Novibet.IpStack.Business.Data
         public DbSet<Continent> Continents { get; set; }
         public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
+        public DbSet<Job> Jobs { get; set; }
 
+        public DbSet<JobDetail> JobDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +25,12 @@ namespace Novibet.IpStack.Business.Data
             modelBuilder.Entity<Ip>().ToTable("Ip");
 
             modelBuilder.Entity<Ip>().HasIndex(z => z.IpAddress).IsUnique();
+
+            modelBuilder.Entity<Job>().ToTable("Job");
+
+            modelBuilder.Entity<JobDetail>().ToTable("JobDetail");
+
+            modelBuilder.Entity<Job>().HasIndex(z => z.Id).IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

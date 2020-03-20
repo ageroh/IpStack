@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Novibet.IpStack.Abstractions;
 using Novibet.IpStack.Business.Data;
+using Novibet.IpStack.Business.Repositories;
 using Novibet.IpStack.Business.Services;
 using Novibet.IpStack.Client;
 using System.Data.SqlClient;
@@ -27,12 +28,17 @@ namespace Novibet.IpStack.Api
             services.AddControllers();
             
             services.AddMemoryCache();
-            
-            services.AddDbContext<IpStackContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddDbContext<IpStackContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Singleton);
+
+            services.AddSingleton<IIpStackService, IpStackService>();
+            services.AddSingleton<IIpRepository, IpRepository>();
+            services.AddSingleton<IJobRepository, JobRepository>();
 
             services.AddHttpClient<IIPInfoProvider, IpStackInfoClient>();
-            services.AddTransient<IIpStackService, IpStackService>();
-            
+
+            services.AddHostedService<JobProcessingService>();
+            services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

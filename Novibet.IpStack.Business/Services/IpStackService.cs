@@ -3,42 +3,71 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Novibet.IpStack.Abstractions;
-using Novibet.IpStack.Business.Data;
-using Novibet.IpStack.Business.Extensions;
 using Novibet.IpStack.Business.Models;
+using Novibet.IpStack.Business.Repositories;
 using static Novibet.IpStack.Business.Constants;
 
 namespace Novibet.IpStack.Business.Services
 {
-    public interface IIpStackService
-    {
-        Task<Ip> GetIpCachedAsync(string ipAddress);
-    }
-
-
     /// <summary>
-    /// Provide caching, validation for Ip requests
+    /// Provide caching, validation, and all services for Ip Stack 
     /// </summary>
     public class IpStackService : IIpStackService
     {
         private readonly ILogger<IpStackService> _logger;
         private readonly IIPInfoProvider _ipInfoProvider;
         private readonly IMemoryCache _memoryCache;
-        private readonly IpStackContext _dbContext;
+        private readonly IIpRepository _ipRepository;
+        private readonly IJobRepository _jobRepository;
+        private readonly IBackgroundTaskQueue _backgroundTaskQueue;
         private static readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1);
+        private readonly int MaxBatchSize;
 
-        public IpStackService(ILogger<IpStackService> logger, IIPInfoProvider iPInfoProvider, IMemoryCache memoryCache, IpStackContext dbContext)
+        public IpStackService(
+            ILogger<IpStackService> logger,
+            IIPInfoProvider iPInfoProvider,
+            IMemoryCache memoryCache,
+            IIpRepository ipRepository,
+            IJobRepository jobRepository,
+            IBackgroundTaskQueue backgroundTaskQueue,
+            IConfiguration configuration)
         {
             _logger = logger;
             _ipInfoProvider = iPInfoProvider;
             _memoryCache = memoryCache;
-            _dbContext = dbContext;
+            _ipRepository = ipRepository;
+            _jobRepository = jobRepository;
+            _backgroundTaskQueue = backgroundTaskQueue;
+            int.TryParse(configuration.GetSection("MaxBatchSize").Value, out MaxBatchSize);
         }
 
+        public async Task<Job> BatchUpdateAsync(string[] ipAddressess)
+        {
+            if (ipAddressess == null || !ipAddressess.Any())
+            {
+                throw new ArgumentNullException(nameof(ipAddressess));
+            }
+
+            var job = await _jobRepository.CreateJobAsync(ipAddressess);
+
+            _backgroundTaskQueue.QueueBackgroundWorkItem((token) => JobUpdateAsync(token, job));
+
+            return job;
+        }
+
+        public async Task<Job> JobStatusAsync(Guid jobId)
+        {
+            if (jobId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(jobId));
+            }
+
+            return await _jobRepository.GetAsync(jobId);
+        }
 
         public async Task<Ip> GetIpCachedAsync(string ipAddress)
         {
@@ -81,78 +110,103 @@ namespace Novibet.IpStack.Business.Services
             }
         }
 
+        public async Task<(Guid, JobStatus)> AddOrUpdateIpAsync(JobDetail jobDetail)
+        {
+            try
+            {
+                var clientIpDetail = await _ipInfoProvider.GetDetailsAsync(jobDetail.IpAddress);
+
+                var ipDetail = await _ipRepository.GetIpAsync(jobDetail.IpAddress);
+                if (ipDetail != null)
+                {
+                    await _ipRepository.UpdateIpAsync(clientIpDetail, jobDetail.IpAddress);
+                }
+                else
+                {
+                    await _ipRepository.AddIpAsync(clientIpDetail, jobDetail.IpAddress);
+                }
+
+                return (jobDetail.Id, JobStatus.Completed);
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Could not complete add or update job detail for address:{ip}", jobDetail.IpAddress);
+                return (jobDetail.Id, JobStatus.Failed);
+            }
+        }
+
+
+
         public async Task<Ip> GetIpAsync(string ipAddress)
         {
-            var ipDetail = await _dbContext.IpAddressess.FirstOrDefaultAsync(z => z.IpAddress == ipAddress);
+            var ipDetail = await _ipRepository.GetIpAsync(ipAddress);
             if (ipDetail != null)
             {
                 return ipDetail;
             }
 
             var clientIpDetail = await _ipInfoProvider.GetDetailsAsync(ipAddress);
+
             if (clientIpDetail != null)
             {
-                GetOrAddContinent(clientIpDetail, out var continentId);
-
-                GetOrAddCountry(clientIpDetail, out var countryId);
-
-                GetOrAddCity(clientIpDetail, out var cityId);
-
-                ipDetail = clientIpDetail.ToIp(ipAddress, cityId, countryId, continentId);
-
-                ipDetail = _dbContext.IpAddressess.Add(ipDetail).Entity;
-
-                await _dbContext.SaveChangesAsync();
-
-                return ipDetail;
+                return await _ipRepository.AddIpAsync(clientIpDetail, ipAddress);
             }
 
             return null;
         }
 
-        private void GetOrAddCity(IPDetails ipDetails, out int cityId)
+        public async Task<JobDetail> JobDetailUpdateAsync(CancellationToken token, JobDetail jobDetail)
         {
-            var city = _dbContext.Cities.FirstOrDefault(z => z.Name == ipDetails.City);
-            if (city != null)
-            {
-                cityId = city.Id;
-                return;
-            }
+            // add or update ipAddress
+            (var jobId, var jobStatus) = await AddOrUpdateIpAsync(jobDetail);
 
-            var cityInserted = _dbContext.Cities.Add(new City { Name = ipDetails.City });
-            _dbContext.SaveChanges();
-
-            cityId = cityInserted.Entity.Id;
+            return await _jobRepository.UpdateJobDetailAsync(jobDetail.IpAddress, jobStatus);
         }
 
-        private void GetOrAddCountry(IPDetails ipDetails, out int countryId)
+        public async Task JobUpdateAsync(CancellationToken token, Job job)
         {
-            var country = _dbContext.Countries.FirstOrDefault(z => z.Name == ipDetails.Country);
-            if (country != null)
+            // process only jobdetails left in progress.
+            if (job == null
+                || !job.JobDetails.Any(z => z.Status == JobStatus.InProgress))
             {
-                countryId = country.Id;
                 return;
             }
 
-            var countryInserted = _dbContext.Countries.Add(new Country { Name = ipDetails.Country });
-            _dbContext.SaveChanges();
+            var inProgressJobs = job.JobDetails.Where(z => z.Status == JobStatus.InProgress)?
+                .ToList();
 
-            countryId = countryInserted.Entity.Id;
+            var jobsBuffer = new List<Task>();
+            for (int i = 0; i < inProgressJobs.Count; i++)
+            {
+                jobsBuffer.Add(JobDetailUpdateAsync(token, inProgressJobs[i]));
+            }
+
+            await ProcessBatchJob(jobsBuffer, job);
+
         }
 
-        private void GetOrAddContinent(IPDetails ipDetails, out int continentId)
+        private async Task<List<Task>> ProcessBatchJob(List<Task> jobsBuffer, Job job)
         {
-            var continent = _dbContext.Continents.FirstOrDefault(z => z.Name == ipDetails.Continent);
-            if (continent != null)
+            IEnumerable<Task> jobsToRun;
+            do
             {
-                continentId = continent.Id;
-                return;
+                jobsToRun = jobsBuffer.Take(MaxBatchSize);
+                foreach (var jobToRun in jobsToRun)
+                {
+                    jobToRun.Start();
+                }
+
+                await Task.WhenAll(jobsToRun);
+                
+                // those are completed or failed.
+                job.Completed += jobsToRun.Count();
+
+                await _jobRepository.UpdateJobAsync(job);
+
+                jobsBuffer = jobsBuffer?.Skip(MaxBatchSize)?.ToList();
             }
-
-            var continentInserted = _dbContext.Continents.Add(new Continent { Name = ipDetails.Continent });
-            _dbContext.SaveChanges();
-
-            continentId = continentInserted.Entity.Id;
+            while (jobsToRun != null && jobsToRun.Any());
+            return jobsBuffer;
         }
     }
 }

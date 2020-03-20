@@ -13,7 +13,7 @@ namespace Novibet.IpStack.Api.Controllers
     {
         private readonly ILogger<IpStackController> _logger;
         private readonly IIpStackService _ipStackService;
-        
+
         public IpStackController(ILogger<IpStackController> logger, IIpStackService ipStackService)
         {
             _logger = logger;
@@ -40,6 +40,29 @@ namespace Novibet.IpStack.Api.Controllers
                 _logger.LogError(ex, "Some error occurred.");
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BatchUpdate(string[] ipAddressess)
+        {
+            var job = await _ipStackService.BatchUpdateAsync(ipAddressess);
+            
+            if(job == null)
+            {
+                _logger.LogError("Batch update failed");
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+
+            return Ok(job.Id);
+        }
+
+
+        [HttpGet("/job/{jobId}")]
+        public async Task<IActionResult> JobProgress(Guid jobId)
+        {
+            var job = await _ipStackService.JobStatusAsync(jobId);
+
+            return Ok(job);
         }
     }
 }

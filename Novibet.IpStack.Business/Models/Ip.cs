@@ -25,28 +25,4 @@ namespace Novibet.IpStack.Business.Models
 
         public Continent Continent { get; set; }
     }
-
-    public class Country
-    {
-        [Key]
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-    }
-
-    public class City
-    {
-        [Key]
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-    }
-
-    public class Continent
-    {
-        [Key]
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-    }
 }
