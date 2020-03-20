@@ -29,11 +29,11 @@ namespace Novibet.IpStack.Api
             
             services.AddMemoryCache();
 
-            services.AddDbContext<IpStackContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Singleton);
+            services.AddDbContext<IpStackContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Transient);
 
-            services.AddSingleton<IIpStackService, IpStackService>();
-            services.AddSingleton<IIpRepository, IpRepository>();
-            services.AddSingleton<IJobRepository, JobRepository>();
+            services.AddTransient<IIpRepository, IpRepository>();
+            services.AddTransient<IJobRepository, JobRepository>();
+            services.AddTransient<IIpStackService, IpStackService>();
 
             services.AddHttpClient<IIPInfoProvider, IpStackInfoClient>();
 

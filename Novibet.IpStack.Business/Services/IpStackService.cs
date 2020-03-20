@@ -126,12 +126,12 @@ namespace Novibet.IpStack.Business.Services
                     await _ipRepository.AddIpAsync(clientIpDetail, jobDetail.IpAddress);
                 }
 
-                return (jobDetail.Id, JobStatus.Completed);
+                return (jobDetail.JobId, JobStatus.Completed);
             }
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Could not complete add or update job detail for address:{ip}", jobDetail.IpAddress);
-                return (jobDetail.Id, JobStatus.Failed);
+                return (jobDetail.JobId, JobStatus.Failed);
             }
         }
 
@@ -172,41 +172,46 @@ namespace Novibet.IpStack.Business.Services
                 return;
             }
 
-            var inProgressJobs = job.JobDetails.Where(z => z.Status == JobStatus.InProgress)?
+            var jobsBuffer = job.JobDetails.Where(z => z.Status == JobStatus.InProgress)?
                 .ToList();
 
-            var jobsBuffer = new List<Task>();
-            for (int i = 0; i < inProgressJobs.Count; i++)
-            {
-                jobsBuffer.Add(JobDetailUpdateAsync(token, inProgressJobs[i]));
-            }
-
-            await ProcessBatchJob(jobsBuffer, job);
+            await ProcessBatchJob(token, jobsBuffer, job);
 
         }
 
-        private async Task<List<Task>> ProcessBatchJob(List<Task> jobsBuffer, Job job)
+        private async Task ProcessBatchJob(CancellationToken token, List<JobDetail> jobsBuffer, Job job)
         {
-            IEnumerable<Task> jobsToRun;
             do
             {
-                jobsToRun = jobsBuffer.Take(MaxBatchSize);
-                foreach (var jobToRun in jobsToRun)
+                var jobsInBatch = 0;
+                foreach (var jobToRun in jobsBuffer.Take(MaxBatchSize))
                 {
-                    jobToRun.Start();
+                    await JobDetailUpdateAsync(token, jobToRun);
+                    jobsInBatch++;
                 }
 
-                await Task.WhenAll(jobsToRun);
-                
-                // those are completed or failed.
-                job.Completed += jobsToRun.Count();
+                job.Completed += jobsInBatch;
 
                 await _jobRepository.UpdateJobAsync(job);
 
                 jobsBuffer = jobsBuffer?.Skip(MaxBatchSize)?.ToList();
             }
-            while (jobsToRun != null && jobsToRun.Any());
-            return jobsBuffer;
+            while (jobsBuffer != null && jobsBuffer.Any());
+        }
+
+        public async Task RecoverJobs(CancellationToken cancellationToken)
+        {
+            var pendingJobs = await _jobRepository.GetByJobStatus(JobStatus.InProgress);
+
+            if (pendingJobs == null || !pendingJobs.Any())
+            {
+                return;
+            }
+
+            foreach (var pending in pendingJobs)
+            {
+                _backgroundTaskQueue.QueueBackgroundWorkItem((token) => JobUpdateAsync(token, pending));
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using Novibet.IpStack.Abstractions;
 using Novibet.IpStack.Business.Data;

@@ -7,7 +7,7 @@ namespace Novibet.IpStack.Business.Services
 {
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
-        private ConcurrentQueue<Func<CancellationToken, Task>> _workItems = new ConcurrentQueue<Func<CancellationToken, Task>>();
+        private static readonly ConcurrentQueue<Func<CancellationToken, Task>> _workItems = new ConcurrentQueue<Func<CancellationToken, Task>>();
         private SemaphoreSlim _signal = new SemaphoreSlim(0);
 
         public void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem)

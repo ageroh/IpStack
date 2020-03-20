@@ -43,9 +43,9 @@ namespace Novibet.IpStack.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> BatchUpdate(string[] ipAddressess)
+        public async Task<IActionResult> BatchUpdate(IpAddressessDto ipAddressessDto)
         {
-            var job = await _ipStackService.BatchUpdateAsync(ipAddressess);
+            var job = await _ipStackService.BatchUpdateAsync(ipAddressessDto.Ips);
             
             if(job == null)
             {
@@ -61,8 +61,12 @@ namespace Novibet.IpStack.Api.Controllers
         public async Task<IActionResult> JobProgress(Guid jobId)
         {
             var job = await _ipStackService.JobStatusAsync(jobId);
+            if(job == null)
+            {
+                return NotFound();
+            }
 
-            return Ok(job);
+            return Ok(new { progess = $"{job.Completed}/{job.Total}" });
         }
     }
 }

@@ -23,8 +23,8 @@ namespace Novibet.IpStack.Business.Repositories
 
         public async Task<List<Job>> GetByJobStatus(JobStatus inProgress)
         {
-            return await 
-                _dbContext.Jobs.Where(z => 
+            return await
+                _dbContext.Jobs.Where(z =>
                     z.JobDetails.Any(x => x.Status == JobStatus.InProgress))
                         .ToListAsync()
                         .ConfigureAwait(false);
@@ -38,40 +38,33 @@ namespace Novibet.IpStack.Business.Repositories
 
         public async Task<Job> CreateJobAsync(string[] ipAddressess)
         {
-            var guid = Guid.NewGuid();
-
-            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            var job = new Job()
             {
-                var jobDetails = await CreateJobDetails(ipAddressess, guid);
+                Completed = 0,
+                Id = Guid.NewGuid(),
+                Total = ipAddressess.Length,
+            };
 
-                var job = new Job()
-                {
-                    Completed = 0,
-                    Id = guid,
-                    Total = ipAddressess.Length,
-                    JobDetails = jobDetails,
-                };
+            await _dbContext.Jobs.AddAsync(job);
+            await _dbContext.SaveChangesAsync();
 
-                await _dbContext.Jobs.AddAsync(job);
-                await _dbContext.SaveChangesAsync();
+            await CreateJobDetails(ipAddressess, job.Id);
 
-                scope.Complete();
+            return job;
 
-                return job;
-            }
         }
 
 
         public async Task<IEnumerable<JobDetail>> CreateJobDetails(string[] ipAddressess, Guid jobId)
         {
             var jobDetails = new List<JobDetail>();
-            foreach(var ipAddress in ipAddressess)
+            foreach (var ipAddress in ipAddressess)
             {
                 jobDetails.Add(
                     new JobDetail
                     {
                         IpAddress = ipAddress,
-                        Id = jobId,
+                        JobId = jobId,
                         Status = JobStatus.InProgress
                     });
             }
@@ -85,7 +78,7 @@ namespace Novibet.IpStack.Business.Repositories
         public async Task<JobDetail> UpdateJobDetailAsync(string ipAddress, JobStatus jobStatus)
         {
             var job = await _dbContext.JobDetails.FirstOrDefaultAsync(x => x.IpAddress == ipAddress);
-            if(job == null)
+            if (job == null)
             {
                 throw new ArgumentNullException(nameof(ipAddress), $"JobDetail Id for IP: {ipAddress} does not exists.");
             }
@@ -98,11 +91,11 @@ namespace Novibet.IpStack.Business.Repositories
             return job;
         }
 
-        public Task UpdateJobAsync(Job job)
+        public async Task UpdateJobAsync(Job job)
         {
             _dbContext.Jobs.Update(job);
 
-            return _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

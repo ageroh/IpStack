@@ -7,6 +7,7 @@ namespace Novibet.IpStack.Business.Data
     {
         public IpStackContext(DbContextOptions<IpStackContext> options) : base(options)
         {
+
         }
 
         public DbSet<Ip> IpAddressess { get; set; }
@@ -14,7 +15,6 @@ namespace Novibet.IpStack.Business.Data
         public DbSet<Country> Countries { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Job> Jobs { get; set; }
-
         public DbSet<JobDetail> JobDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,5 +34,12 @@ namespace Novibet.IpStack.Business.Data
 
             base.OnModelCreating(modelBuilder);
         }
+
+#if DEBUG
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.EnableSensitiveDataLogging();
+        }
+#endif
     }
 }
