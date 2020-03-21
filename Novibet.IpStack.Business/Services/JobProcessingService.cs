@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -9,13 +10,16 @@ namespace Novibet.IpStack.Business.Services
     public class JobProcessingService : BackgroundService
     {
         private readonly ILogger<JobProcessingService> _logger;
+        public IServiceProvider Services { get; }
 
         public JobProcessingService(
             IBackgroundTaskQueue taskQueue,
-            ILogger<JobProcessingService> logger)
+            ILogger<JobProcessingService> logger,
+            IServiceProvider services)
         {
             TaskQueue = taskQueue;
             _logger = logger;
+            Services = services;
         }
 
         public IBackgroundTaskQueue TaskQueue { get; }
@@ -40,7 +44,14 @@ namespace Novibet.IpStack.Business.Services
 
                 try
                 {
-                    await workItem(stoppingToken);
+                    using (var scope = Services.CreateScope())
+                    {
+                        var ipStackService =
+                            scope.ServiceProvider
+                                .GetRequiredService<IIpStackService>();
+
+                        await ipStackService.JobUpdateAsync(stoppingToken, workItem);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -57,5 +68,4 @@ namespace Novibet.IpStack.Business.Services
             await base.StopAsync(stoppingToken);
         }
     }
-
 }

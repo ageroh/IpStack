@@ -2,26 +2,27 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Novibet.IpStack.Business.Models;
 
 namespace Novibet.IpStack.Business.Services
 {
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
-        private static readonly ConcurrentQueue<Func<CancellationToken, Task>> _workItems = new ConcurrentQueue<Func<CancellationToken, Task>>();
+        private static readonly ConcurrentQueue<Job> _workItems = new ConcurrentQueue<Job>();
         private SemaphoreSlim _signal = new SemaphoreSlim(0);
 
-        public void QueueBackgroundWorkItem(Func<CancellationToken, Task> workItem)
+        public void QueueBackgroundWorkItem(Job job)
         {
-            if (workItem == null)
+            if (job == null)
             {
-                throw new ArgumentNullException(nameof(workItem));
+                throw new ArgumentNullException(nameof(job));
             }
 
-            _workItems.Enqueue(workItem);
+            _workItems.Enqueue(job);
             _signal.Release();
         }
 
-        public async Task<Func<CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<Job> DequeueAsync(CancellationToken cancellationToken)
         {
             await _signal.WaitAsync(cancellationToken);
             _workItems.TryDequeue(out var workItem);

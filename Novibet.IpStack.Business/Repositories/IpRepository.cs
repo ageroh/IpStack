@@ -40,7 +40,13 @@ namespace Novibet.IpStack.Business.Repositories
         {
             var ipDetail = await IpDetails(clientIpDetail, ipAddress);
 
-            _dbContext.IpAddressess.Update(ipDetail);
+            var currentIp = await _dbContext.IpAddressess.FirstOrDefaultAsync(x => x.IpAddress == ipAddress);
+
+            currentIp.Longitude = ipDetail.Longitude;
+            currentIp.Latitude = ipDetail.Latitude;
+            currentIp.CityId = ipDetail.CityId;
+            currentIp.CountryId = ipDetail.CountryId;
+            currentIp.ContinentId = ipDetail.ContinentId;
 
             await _dbContext.SaveChangesAsync();
 
@@ -55,8 +61,8 @@ namespace Novibet.IpStack.Business.Repositories
 
             var city = await GetOrAddCity(clientIpDetail);
 
-            var ipDetail = clientIpDetail.ToIp(ipAddress, city.Id, country.Id, continent.Id);
-            return ipDetail;
+            var ip = clientIpDetail.ToIp(ipAddress, city.Id, country.Id, continent.Id);
+            return ip;
         }
 
         public async Task<City> GetOrAddCity(IPDetails ipDetails)

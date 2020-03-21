@@ -54,7 +54,7 @@ namespace Novibet.IpStack.Business.Services
 
             var job = await _jobRepository.CreateJobAsync(ipAddressess);
 
-            _backgroundTaskQueue.QueueBackgroundWorkItem((token) => JobUpdateAsync(token, job));
+            _backgroundTaskQueue.QueueBackgroundWorkItem(job);
 
             return job;
         }
@@ -210,7 +210,7 @@ namespace Novibet.IpStack.Business.Services
 
             foreach (var pending in pendingJobs)
             {
-                _backgroundTaskQueue.QueueBackgroundWorkItem((token) => JobUpdateAsync(token, pending));
+                _backgroundTaskQueue.QueueBackgroundWorkItem(pending);
             }
         }
     }
