@@ -6,5 +6,7 @@ To use please import `IpStack.postman_collection` to your Postman after starting
 
 Feel free to contribute
 
-For any comments please email me at `argigero@gmail.com`
+*** 
+
+For any comments please email me at  [argigero](mailto:argigero@gmail.com)
 
