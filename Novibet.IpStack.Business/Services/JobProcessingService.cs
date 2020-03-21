@@ -28,7 +28,28 @@ namespace Novibet.IpStack.Business.Services
         {
             _logger.LogInformation($"Queued Hosted Service is running.");
 
+            await RecoverJobs(stoppingToken);
+
             await BackgroundProcessing(stoppingToken);
+        }
+
+        private async Task RecoverJobs(CancellationToken stoppingToken)
+        {
+            try
+            {
+                using (var scope = Services.CreateScope())
+                {
+                    var ipStackService =
+                        scope.ServiceProvider
+                            .GetRequiredService<IIpStackService>();
+
+                    await ipStackService.RecoverJobs(stoppingToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while recovering jobs in startup");
+            }
         }
 
         /// <summary>

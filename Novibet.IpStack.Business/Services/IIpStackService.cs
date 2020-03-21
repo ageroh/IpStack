@@ -11,5 +11,6 @@ namespace Novibet.IpStack.Business.Services
         Task<Job> BatchUpdateAsync(string[] ipAddressess);
         Task<Job> JobStatusAsync(Guid jobId);
         Task JobUpdateAsync(CancellationToken token, Job pending);
+        Task RecoverJobs(CancellationToken cancellationToken);
     }
 }

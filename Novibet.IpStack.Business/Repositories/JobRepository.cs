@@ -33,7 +33,9 @@ namespace Novibet.IpStack.Business.Repositories
 
         public Task<Job> GetAsync(Guid jobId)
         {
-            return _dbContext.Jobs.FirstOrDefaultAsync(z => z.Id == jobId);
+            return _dbContext.Jobs
+                    .Include(z => z.JobDetails)
+                    .FirstOrDefaultAsync(z => z.Id == jobId);
         }
 
         public async Task<Job> CreateJobAsync(string[] ipAddressess)

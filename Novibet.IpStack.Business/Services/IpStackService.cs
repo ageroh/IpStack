@@ -165,17 +165,22 @@ namespace Novibet.IpStack.Business.Services
 
         public async Task JobUpdateAsync(CancellationToken token, Job job)
         {
-            // process only jobdetails left in progress.
-            if (job == null
-                || !job.JobDetails.Any(z => z.Status == JobStatus.InProgress))
+            if (job == null)
+            {
+                throw new ArgumentNullException(nameof(job));
+            }
+
+            var currentJob = await _jobRepository.GetAsync(job.Id);
+            
+            if (!currentJob.JobDetails.Any(z => z.Status == JobStatus.InProgress))
             {
                 return;
             }
 
-            var jobsBuffer = job.JobDetails.Where(z => z.Status == JobStatus.InProgress)?
+            var jobDetailsToProcess = currentJob.JobDetails.Where(z => z.Status == JobStatus.InProgress)?
                 .ToList();
 
-            await ProcessBatchJob(token, jobsBuffer, job);
+            await ProcessBatchJob(token, jobDetailsToProcess, currentJob);
 
         }
 
